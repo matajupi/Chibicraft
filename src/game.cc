@@ -21,6 +21,15 @@ namespace {
     }
 }
 
+Game::Game(int screen_width, int screen_height, bool fullscreen) {
+    if (screen_width < 0 || screen_height < 0) {
+        GetScreenResolution(screen_width, screen_height);
+    }
+    screen_width_ = screen_width;
+    screen_height_ = screen_height;
+    fullscreen_ = fullscreen;
+}
+
 void Game::Start() {
     Init();
     while (!QuickCG::done()) {
@@ -39,8 +48,7 @@ void Game::Init() {
 }
 
 void Game::InitScreen() {
-    GetScreenResolution(screen_width_, screen_height_);
-    QuickCG::screen(screen_width_, screen_height_, true, "Chibicraft");
+    QuickCG::screen(screen_width_, screen_height_, fullscreen_, "Chibicraft");
     SDL_ShowCursor(false);
 
     buffer_ = new uint32_t[screen_height_ * screen_width_];

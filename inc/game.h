@@ -6,7 +6,8 @@
 
 class Game {
 public:
-    Game() = default;
+    Game() : Game(-1, -1, false) { }
+    Game(int screen_width, int screen_height, bool fullscreen = true);
     void Start();
 
 private:
@@ -48,6 +49,7 @@ private:
 
     int screen_width_;
     int screen_height_;
+    bool fullscreen_;
 
     std::vector<std::vector<uint32_t>> textures_;
     glm::vec2 pos_, dir_, plane_;
