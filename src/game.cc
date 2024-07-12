@@ -1,9 +1,12 @@
 #include "game.h"
 
+#include <cstdio>
+#include <fstream>
 #include <iostream>
 #include <cmath>
-#include <X11/Xlib.h>
 #include <cassert>
+
+#include <X11/Xlib.h>
 
 #define GLM_ENABLE_EXPERIMENTAL
 #include <glm/gtx/rotate_vector.hpp>
@@ -42,7 +45,8 @@ void Game::Start() {
 
 void Game::Init() {
     InitScreen();
-    LoadTextures();
+    LoadMap(0);
+    LoadTexs();
     InitRaycaster();
 }
 
@@ -53,19 +57,37 @@ void Game::InitScreen() {
     buffer_ = new uint32_t[screen_height_ * screen_width_];
 }
 
-void Game::LoadTextures() {
-    textures_.resize(kNTextures);
-    for (int i = 0; kNTextures > i; i++) textures_[i].resize(kTexWidth * kTexHeight);
+void Game::LoadMap(int mid) {
+    char cfn[32];
+    sprintf(cfn, "res/map/%08x.map", mid);
+    std::string fn(cfn);
+    std::ifstream ifs(fn, std::ios::binary);
+
+    ifs.seekg(0, std::ios::end);
+    long long int size = ifs.tellg();
+    if (size < kMapHeight * kMapDepth * kMapWidth) {
+        std::cerr << "Error: Failed to load map." << std::endl;
+        Quit();
+    }
+
+    ifs.seekg(0);
+    ifs.read(world_map_, size);
+}
+
+void Game::LoadTexs() {
+    texs_.resize(kNTexs);
+    for (int i = 0; kNTexs > i; i++)
+        texs_[i].resize(kTexWidth * kTexHeight);
 
     unsigned long tw, th, err = 0;
-    err |= QuickCG::loadImage(textures_[0], tw, th, "res/textures/eagle.png");
-    err |= QuickCG::loadImage(textures_[1], tw, th, "res/textures/redbrick.png");
-err |= QuickCG::loadImage(textures_[3], tw, th, "res/textures/purplestone.png");
-    err |= QuickCG::loadImage(textures_[2], tw, th, "res/textures/greystone.png");
-    err |= QuickCG::loadImage(textures_[4], tw, th, "res/textures/bluestone.png");
-err |= QuickCG::loadImage(textures_[6], tw, th, "res/textures/mossy.png");
-    err |= QuickCG::loadImage(textures_[5], tw, th, "res/textures/wood.png");
-    err |= QuickCG::loadImage(textures_[7], tw, th, "res/textures/colorstone.png");
+    err |= QuickCG::loadImage(texs_[0], tw, th, "res/texs/eagle.png");
+    err |= QuickCG::loadImage(texs_[1], tw, th, "res/texs/redbrick.png");
+err |= QuickCG::loadImage(texs_[3], tw, th, "res/texs/purplestone.png");
+    err |= QuickCG::loadImage(texs_[2], tw, th, "res/texs/greystone.png");
+    err |= QuickCG::loadImage(texs_[4], tw, th, "res/texs/bluestone.png");
+err |= QuickCG::loadImage(texs_[6], tw, th, "res/texs/mossy.png");
+    err |= QuickCG::loadImage(texs_[5], tw, th, "res/texs/wood.png");
+    err |= QuickCG::loadImage(texs_[7], tw, th, "res/texs/colorstone.png");
     if (err) {
         std::cerr << "Error: Failed to load textures." << std::endl;
         Quit();
@@ -211,7 +233,7 @@ void Game::Raycasting() {
                     tex_x = kTexWidth - tex_x - 1;
                 }
 
-                uint32_t color = GetTexColor(tex, tex_x, kTexWidth - tex_y - 1);
+                uint32_t color = GetTexColor(tex, tex_x, kTexHeight - tex_y - 1);
                 if (side == 1 || side == 2) {
                     color = (color >> 1) & 0x7F7F7F;
                 }
