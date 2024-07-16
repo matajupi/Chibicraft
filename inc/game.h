@@ -7,6 +7,9 @@
 #include <iostream>
 #include <glm/glm.hpp>
 
+static const int kCursorHeight = 30;
+static const int kCursorWidth = 30;
+
 class Game {
 public:
     Game() : Game(-1, -1, false) { }
@@ -123,6 +126,7 @@ private:
     void InitRaycaster();
 
     void Update();
+    void DrawCursor();
     bool CastRay(int x, int y, Ray &ray) const;
     uint32_t CalcPixelColor(const Ray &ray) const;
     void Raycasting();

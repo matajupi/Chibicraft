@@ -14,6 +14,39 @@
 #include "quickcg.h"
 
 namespace {
+    const char kCursorShape[kCursorHeight][kCursorWidth + 1] = {
+        "              @@              ",
+        "              @@              ",
+        "              @@              ",
+        "              @@              ",
+        "              @@              ",
+        "              @@              ",
+        "              @@              ",
+        "              @@              ",
+        "              @@              ",
+        "              @@              ",
+        "              @@              ",
+        "              @@              ",
+        "              @@              ",
+        "              @@              ",
+        "@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@",
+        "@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@",
+        "              @@              ",
+        "              @@              ",
+        "              @@              ",
+        "              @@              ",
+        "              @@              ",
+        "              @@              ",
+        "              @@              ",
+        "              @@              ",
+        "              @@              ",
+        "              @@              ",
+        "              @@              ",
+        "              @@              ",
+        "              @@              ",
+        "              @@              ",
+    };
+
     void GetScreenResolution(int &width, int &height) {
         Display* disp = XOpenDisplay(NULL);
         Screen*  scrn = DefaultScreenOfDisplay(disp);
@@ -116,6 +149,7 @@ void Game::InitRaycaster() {
 
 void Game::Update() {
     Raycasting();
+    DrawCursor();
 
     QuickCG::drawBuffer(buffer_);
 
@@ -124,6 +158,20 @@ void Game::Update() {
     frame_time_ = (time_ - old_time_) / 1000.0;
     QuickCG::print(1.0 / frame_time_);
     QuickCG::redraw();
+}
+
+void Game::DrawCursor() {
+    for (int y = 0; kCursorHeight > y; y++) {
+        for (int x = 0; kCursorWidth > x; x++) {
+            if (kCursorShape[y][x] == '@') {
+                SetBufColor(
+                    x + screen_width_ / 2 - kCursorWidth / 2,
+                    y + screen_height_ / 2 - kCursorHeight / 2,
+                    0x19959c
+                );
+            }
+        }
+    }
 }
 
 bool Game::CastRay(int x, int y, Ray &ray) const {
@@ -483,3 +531,4 @@ void Game::Quit() {
     delete buffer_;
     QuickCG::end();
 }
+
