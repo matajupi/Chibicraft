@@ -1,0 +1,79 @@
+@startuml
+
+class Texture {
+    - {static} std::map<int, Texture> texture_table_
+
+    - Texture(int tid)
+    + uint32_t GetPixel(int x, int y) const
+    + void Load()
+    + {static} const Texture &GetTexture(int tid)
+}
+
+enum BlockSurface {
+    XY_Lower
+    XY_Higher
+    XZ_Lower
+    XZ_Higher
+    YZ_Lower
+    YZ_Higher
+}
+
+abstract Block {
+    - {static} std::map<int, Block> block_table_
+
+    - Block()
+    + {abstract} const Texture *GetTexture(BlockSurface surface, BlockSurface front)
+    + {static} const Block &GetBlock(int bid)
+}
+class ConcreteBlock {
+    + const Texture *GetTexture(BlockSurface surface, BlockSurface front)
+}
+
+ConcreteBlock --|> Block
+ConcreteBlock --> "use" Texture
+
+class World {
+    - std::vector<Chunk> chunks_
+
+    + const Block &GetBlock(const glm::ivec3 &pos) const
+    + void SetBlock(const glm::ivec3 &pos, const Block &block)
+}
+class Chunk {
+    + const int kHeight
+    + const int kWidth
+    + const int kDepth
+    - char contents_[kHeight][kWidth][kDepth]
+
+    + Chunk(int cid)
+    + bool Exists() const
+    + void Generate()
+    + void Load()
+    + void Save()
+    + const Block &GetBlock(const glm::ivec3 &pos) const
+    + void SetBlock(const glm::ivec3 &pos, const Block &block)
+}
+
+World o--> Chunk
+Chunk --> "use" Block
+
+class Ray {
+    + bool Cast(int x, int y, const Player &player, const World &world) const
+}
+abstract Raycaster {
+    + {abstract} void Raycasting(Screen &screen, const Player &player, const World &world)
+}
+class SimpleRaycaster {
+    + void Raycasting(Screen &screen, const Player &player, const World &world)
+}
+class CrossRaycaster {
+    + void Raycasting(Screen &screen, const Player &player, const World &world)
+}
+
+SimpleRaycaster --|> Raycaster
+CrossRaycaster --|> Raycaster
+SimpleRaycaster --> "use" Ray
+
+class Screen { }
+class Player { }
+
+@enduml

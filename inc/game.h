@@ -4,7 +4,9 @@
 #include <cstdint>
 #include <cassert>
 #include <string>
+#include <fstream>
 #include <iostream>
+#include <iomanip>
 #include <glm/glm.hpp>
 
 static const int kCursorHeight = 30;
@@ -45,10 +47,17 @@ private:
     void SetMapBlock(const glm::ivec3 &map_pos, char block) {
         SetMapBlock(map_pos.x, map_pos.y, map_pos.z, block);
     }
+    std::string ToMapFileName(int mid) {
+        std::stringstream ss;
+        ss << "res/map/" << std::setfill('0') << std::setw(8)
+            << std::hex << mid << ".map";
+        return ss.str();
+    }
     void LoadMap(int mid);
+    void SaveMap(int mid);
 
     // ======== Textures ========
-    static constexpr const int kNTexs = 3;
+    static constexpr const int kNTexs = 6;
 
     static constexpr const int kTexWidth = 16;
     static constexpr const int kTexHeight = 16;
@@ -94,6 +103,7 @@ private:
     static constexpr const float kPlayerDestBlockDist = 3.5;
 
     glm::vec3 pos_, dir_, plane_x_, plane_y_;
+    int select_block_ = 1;
 
     // ======== Screen ========
     int screen_width_;
@@ -118,12 +128,13 @@ private:
     float frame_time_;
 
     // ======== Input ========
+    // QuickCGではMouseのPressが取れないので、flagを持っておく
     bool prev_lmb_;
     bool prev_rmb_;
 
     void Init();
     void InitScreen();
-    void InitRaycaster();
+    void InitPlayer();
 
     void Update();
     void DrawCursor();

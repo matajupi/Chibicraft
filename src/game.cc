@@ -1,8 +1,6 @@
 #include "game.h"
 
 #include <cstdio>
-#include <fstream>
-#include <iostream>
 #include <cmath>
 #include <cassert>
 
@@ -63,13 +61,16 @@ const std::array<std::string, Game::kNTexs> Game::kTexFiles = {
     "grass_carried.png",            // 0
     "grass_side_carried.png",       // 1
     "dirt.png",                     // 2
+    "planks_big_oak.png",           // 3
+    "quartz_block_chiseled_top.png",// 4
+    "quartz_block_chiseled.png",    // 5
 };
 // 6面を6byteで指定
 const std::array<long long int, Game::kNBlocks> Game::kBlockToTexs = {
     0xffffffffffff,                 // Air
     0x010100020101,                 // Grass
-    0x010100020101,                 // Grass
-    0x010100020101,                 // Grass
+    0x030303030303,                 // Oak plank
+    0x050504040505,                 // Quartz block chiseled
     0x010100020101,                 // Grass
     0x010100020101,                 // Grass
     0x010100020101,                 // Grass
@@ -100,7 +101,7 @@ void Game::Init() {
     InitScreen();
     LoadMap(0);
     LoadTexs();
-    InitRaycaster();
+    InitPlayer();
 }
 
 void Game::InitScreen() {
@@ -111,20 +112,37 @@ void Game::InitScreen() {
 }
 
 void Game::LoadMap(int mid) {
-    char cfn[32];
-    sprintf(cfn, "res/map/%08x.map", mid);
-    std::string fn(cfn);
-    std::ifstream ifs(fn, std::ios::binary);
+    std::string mfn = ToMapFileName(mid);
+
+    std::ifstream ifs(mfn, std::ios::binary);
+    if (!ifs) {
+        std::cerr << "Error: Failed to open map." << std::endl;
+        Quit();
+    }
 
     ifs.seekg(0, std::ios::end);
-    long long int size = ifs.tellg();
-    if (size < kMapHeight * kMapDepth * kMapWidth) {
+    int file_size = ifs.tellg();
+    int map_size = kMapHeight * kMapDepth * kMapWidth;
+    if (file_size < map_size) {
         std::cerr << "Error: Failed to load map." << std::endl;
         Quit();
     }
 
     ifs.seekg(0);
-    ifs.read(world_map_, size);
+    ifs.read(world_map_, map_size);
+}
+
+void Game::SaveMap(int mid) {
+    std::string mfn = ToMapFileName(mid);
+
+    std::ofstream ofs(mfn, std::ios::binary);
+    if (!ofs) {
+        std::cerr << "Error: Failed to open map." << std::endl;
+        Quit();
+    }
+
+    int map_size = kMapHeight * kMapDepth * kMapWidth;
+    ofs.write(world_map_, map_size);
 }
 
 void Game::LoadTexs() {
@@ -139,9 +157,9 @@ void Game::LoadTexs() {
     }
 }
 
-void Game::InitRaycaster() {
+void Game::InitPlayer() {
     // y = 1だったら、床にへばりついている状態なので、床が単色になる(それはそう)
-    pos_ = glm::vec3(21.0, 3.0, 11.5);
+    pos_ = glm::vec3(21.0, 3.5, 11.5);
     dir_ = glm::vec3(0.0, 0.0, 1.0);
     plane_x_ = glm::vec3(0.66, 0.0, 0.0);
     plane_y_ = glm::vec3(0.0, 0.4125, 0.0);
@@ -157,6 +175,9 @@ void Game::Update() {
     time_ = QuickCG::getTicks();
     frame_time_ = (time_ - old_time_) / 1000.0;
     QuickCG::print(1.0 / frame_time_);
+
+    QuickCG::print(select_block_, 0, 20);
+
     QuickCG::redraw();
 }
 
@@ -373,6 +394,14 @@ void Game::HandleKeys() {
         TryMoveY(mvdir.y);
         TryMoveZ(mvdir.z);
     }
+
+    int n_visible_blocks = kNBlocks - 2;
+    if (QuickCG::keyPressed(SDLK_RIGHT)) {
+        select_block_ = select_block_ % n_visible_blocks + 1;
+    }
+    if (QuickCG::keyPressed(SDLK_LEFT)) {
+        select_block_ = (select_block_ - 2 + n_visible_blocks) % n_visible_blocks + 1;
+    }
 }
 
 void Game::HandleMouseMove(int mouse_x, int mouse_y) {
@@ -420,8 +449,7 @@ void Game::OnRightButtonPress() {
 
     assert(GetMapBlock(block_pos) == 0);
 
-    // TODO: select block
-    SetMapBlock(block_pos, 1);
+    SetMapBlock(block_pos, select_block_);
     hit = HitBlock({
         glm::ivec3(0, 0, 0), glm::ivec3(0, 0, 1),
         glm::ivec3(0, 1, 0), glm::ivec3(0, 1, 1),
@@ -528,6 +556,8 @@ void Game::TryMoveZ(float mvz) {
 }
 
 void Game::Quit() {
+    // TODO: LoadされていないMapはSaveしない
+    SaveMap(0);
     delete buffer_;
     QuickCG::end();
 }
