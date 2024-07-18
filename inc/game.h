@@ -140,7 +140,8 @@ private:
     void DrawCursor();
     bool CastRay(int x, int y, Ray &ray) const;
     uint32_t CalcPixelColor(const Ray &ray) const;
-    void Raycasting();
+    void SimpleRaycasting();
+    void SlackOffRaycasting();
 
     // part: Playerの部位を指定
     // x: 0: x-(Playerのx-面のx座標), 1: x+

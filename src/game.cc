@@ -166,7 +166,7 @@ void Game::InitPlayer() {
 }
 
 void Game::Update() {
-    Raycasting();
+    SlackOffRaycasting();
     DrawCursor();
 
     QuickCG::drawBuffer(buffer_);
@@ -344,7 +344,7 @@ uint32_t Game::CalcPixelColor(const Ray &ray) const {
     return color;
 }
 
-void Game::Raycasting() {
+void Game::SimpleRaycasting() {
     for (int y = 0; screen_height_ > y; y++) {
         for (int x = 0; screen_width_ > x; x++) {
             Ray ray;
@@ -360,8 +360,32 @@ void Game::Raycasting() {
     }
 }
 
+void Game::SlackOffRaycasting() {
+    for (int y = 1; screen_height_ > y; y += 3) {
+        for (int x = 1; screen_width_ > x; x += 3) {
+            Ray ray;
+            bool hit = CastRay(x, y, ray);
+            if (hit) {
+                uint32_t color = CalcPixelColor(ray);
+                for (int dy = -1; 1 >= dy; dy++) {
+                    for (int dx = -1; 1 >= dx; dx++) {
+                        SetBufColor(x + dx, screen_height_ - y - dy - 1, color);
+                    }
+                }
+            }
+            else {
+                for (int dy = -1; 1 >= dy; dy++) {
+                    for (int dx = -1; 1 >= dx; dx++) {
+                        SetBufColor(x + dx, screen_height_ - y - dy - 1, 0xFFFFFF);
+                    }
+                }
+            }
+        }
+    }
+}
+
 void Game::HandleKeys() {
-    float move_speed = frame_time_ * 2.0;
+    float move_speed = frame_time_ * 3.0;
 
     glm::vec3 perdir = glm::normalize(plane_x_);
     glm::vec3 mvdir(0, 0, 0);
