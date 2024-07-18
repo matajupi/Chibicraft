@@ -1,5 +1,5 @@
 CXX = g++
-CXXFLAGS = -Iinc -lSDL -lX11 -lglm -Wall
+CXXFLAGS = -Iinc -lSDL -lX11 -lglm -Wall -fopenmp
 LINT = cpplint
 
 B = bin

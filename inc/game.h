@@ -81,7 +81,7 @@ private:
     void LoadTexs();
 
     // ======== Ray ========
-    static constexpr const int kMaxRayDist = 20;
+    static constexpr const int kMaxRayDist = 30;
 
     struct Ray {
         glm::vec3 dir;

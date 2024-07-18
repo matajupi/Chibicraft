@@ -5,6 +5,7 @@
 #include <cassert>
 
 #include <X11/Xlib.h>
+#include <omp.h>
 
 #define GLM_ENABLE_EXPERIMENTAL
 #include <glm/gtx/rotate_vector.hpp>
@@ -167,6 +168,7 @@ void Game::InitPlayer() {
 
 void Game::Update() {
     SlackOffRaycasting();
+    // SimpleRaycasting();
     DrawCursor();
 
     QuickCG::drawBuffer(buffer_);
@@ -345,6 +347,7 @@ uint32_t Game::CalcPixelColor(const Ray &ray) const {
 }
 
 void Game::SimpleRaycasting() {
+#pragma omp parallel for
     for (int y = 0; screen_height_ > y; y++) {
         for (int x = 0; screen_width_ > x; x++) {
             Ray ray;
@@ -361,6 +364,7 @@ void Game::SimpleRaycasting() {
 }
 
 void Game::SlackOffRaycasting() {
+#pragma omp parallel for
     for (int y = 1; screen_height_ > y; y += 3) {
         for (int x = 1; screen_width_ > x; x += 3) {
             Ray ray;
