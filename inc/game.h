@@ -9,6 +9,8 @@
 #include <iomanip>
 #include <glm/glm.hpp>
 
+#include "world.h"
+
 static const int kCursorHeight = 30;
 static const int kCursorWidth = 30;
 
@@ -19,66 +21,7 @@ public:
     void Start();
 
 private:
-    // ======== Map ========
-    static constexpr const int kMapWidth = 26;
-    static constexpr const int kMapDepth = 26;
-    static constexpr const int kMapHeight = 8;
-
-    // AirBlock, TransparentBlockもBlockとして含む
-    static constexpr const int kNBlocks = 10;
-    static constexpr const int kAirBlock = 0;
-    static constexpr const int kTransparentBlock = kNBlocks - 1;
-
-    char world_map_[kMapHeight * kMapWidth * kMapDepth];
-
-    char GetMapBlock(int x, int y, int z) const {
-        assert(0 <= x && x < kMapWidth && 0 <= y && y < kMapHeight &&
-            0 <= z && z < kMapDepth);
-        return world_map_[y * kMapWidth * kMapDepth + x * kMapDepth + z];
-    }
-    char GetMapBlock(const glm::ivec3 &map_pos) const {
-        return GetMapBlock(map_pos.x, map_pos.y, map_pos.z);
-    }
-    void SetMapBlock(int x, int y, int z, char block) {
-        assert(0 <= x && x < kMapWidth && 0 <= y && y < kMapHeight &&
-            0 <= z && z < kMapDepth && 0 <= block && block < kNBlocks);
-        world_map_[y * kMapWidth * kMapDepth + x * kMapDepth + z] = block;
-    }
-    void SetMapBlock(const glm::ivec3 &map_pos, char block) {
-        SetMapBlock(map_pos.x, map_pos.y, map_pos.z, block);
-    }
-    std::string ToMapFileName(int mid) {
-        std::stringstream ss;
-        ss << "res/map/" << std::setfill('0') << std::setw(8)
-            << std::hex << mid << ".map";
-        return ss.str();
-    }
-    void LoadMap(int mid);
-    void SaveMap(int mid);
-
-    // ======== Textures ========
-    static constexpr const int kNTexs = 6;
-
-    static constexpr const int kTexWidth = 16;
-    static constexpr const int kTexHeight = 16;
-
-    static const std::string kTexDir;
-    static const std::array<std::string, kNTexs> kTexFiles;
-    static const std::array<long long int, kNBlocks> kBlockToTexs;
-    std::vector<uint32_t> texs_[kNTexs];
-
-    // face: ブロックの面
-    // 0: x-面, 1: x+面, 2: y-面, 3: y+面, 4: z-面, 5: z+面
-    int GetTex(int block, int face) const {
-        assert(0 <= block && block < kNBlocks && 0 <= face && face < 6);
-        return kBlockToTexs[block] >> (face * 8) & 0xff;
-    }
-    uint32_t GetTexColor(int tex, int x, int y) const {
-        assert(0 <= tex && tex < kNTexs && 0 <= x && x < kTexWidth &&
-            0 <= y && y < kTexHeight);
-        return texs_[tex][kTexWidth * y + x];
-    }
-    void LoadTexs();
+    World world_;
 
     // ======== Ray ========
     static constexpr const int kMaxRayDist = 20;

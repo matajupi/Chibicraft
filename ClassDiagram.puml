@@ -1,12 +1,12 @@
 @startuml
 
 class Texture {
-    - {static} std::map<int, Texture> texture_table_
+    - {static} std::map<TID_T, Texture *> texture_table_
 
-    - Texture(int tid)
+    + Texture(TID_T tid)
     + uint32_t GetPixel(int x, int y) const
     + void Load()
-    + {static} const Texture &GetTexture(int tid)
+    + {static} cosnt Texture *GetTexture(TID_T tid)
 }
 
 enum BlockSurface {
@@ -18,39 +18,36 @@ enum BlockSurface {
     YZ_Higher
 }
 
-abstract Block {
-    - {static} std::map<int, Block> block_table_
+class Block {
+    - {static} std::map<BID_T, Block *> block_table_
 
-    - Block()
-    + {abstract} const Texture *GetTexture(BlockSurface surface, BlockSurface front)
-    + {static} const Block &GetBlock(int bid)
-}
-class ConcreteBlock {
-    + const Texture *GetTexture(BlockSurface surface, BlockSurface front)
+    + Block(BID_T bid)
+    + const Texture *GetTexture(BlockSurface surface)
+    + {static} const Block *GetBlock(BID_T bid)
 }
 
-ConcreteBlock --|> Block
-ConcreteBlock --> "use" Texture
+Block --> "use" Texture
+Block --> "use" BlockSurface
 
 class World {
     - std::vector<Chunk> chunks_
 
-    + const Block &GetBlock(const glm::ivec3 &pos) const
-    + void SetBlock(const glm::ivec3 &pos, const Block &block)
+    + const Block *GetBlock(const glm::ivec3 &pos) const
+    + void SetBlock(const glm::ivec3 &pos, const Block *block)
 }
 class Chunk {
     + const int kHeight
     + const int kWidth
     + const int kDepth
-    - char contents_[kHeight][kWidth][kDepth]
+    - BID_T contents_[kHeight][kWidth][kDepth]
 
-    + Chunk(int cid)
+    + Chunk(CID_T cid)
     + bool Exists() const
     + void Generate()
     + void Load()
     + void Save()
-    + const Block &GetBlock(const glm::ivec3 &pos) const
-    + void SetBlock(const glm::ivec3 &pos, const Block &block)
+    + const Block *GetBlock(const glm::ivec3 &pos) const
+    + void SetBlock(const glm::ivec3 &pos, const Block *block)
 }
 
 World o--> Chunk

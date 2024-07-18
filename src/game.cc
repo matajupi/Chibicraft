@@ -3,6 +3,7 @@
 #include <cstdio>
 #include <cmath>
 #include <cassert>
+#include <exception>
 
 #include <X11/Xlib.h>
 
@@ -56,28 +57,6 @@ namespace {
     }
 }
 
-const std::string Game::kTexDir = "bedrock-samples/resource_pack/textures/blocks/";
-const std::array<std::string, Game::kNTexs> Game::kTexFiles = {
-    "grass_carried.png",            // 0
-    "grass_side_carried.png",       // 1
-    "dirt.png",                     // 2
-    "planks_big_oak.png",           // 3
-    "quartz_block_chiseled_top.png",// 4
-    "quartz_block_chiseled.png",    // 5
-};
-// 6面を6byteで指定
-const std::array<long long int, Game::kNBlocks> Game::kBlockToTexs = {
-    0xffffffffffff,                 // Air
-    0x010100020101,                 // Grass
-    0x030303030303,                 // Oak plank
-    0x050504040505,                 // Quartz block chiseled
-    0x010100020101,                 // Grass
-    0x010100020101,                 // Grass
-    0x010100020101,                 // Grass
-    0x010100020101,                 // Grass
-    0x010100020101,                 // Grass
-    0xffffffffffff,                 // Transparent
-};
 
 Game::Game(int screen_width, int screen_height, bool fullscreen)
     : fullscreen_(fullscreen), prev_lmb_(false) {
@@ -99,9 +78,9 @@ void Game::Start() {
 
 void Game::Init() {
     InitScreen();
-    LoadMap(0);
-    LoadTexs();
     InitPlayer();
+
+    // std::set_terminate([&](){ Quit(); });
 }
 
 void Game::InitScreen() {
@@ -109,52 +88,6 @@ void Game::InitScreen() {
     SDL_ShowCursor(false);
 
     buffer_ = new uint32_t[screen_height_ * screen_width_];
-}
-
-void Game::LoadMap(int mid) {
-    std::string mfn = ToMapFileName(mid);
-
-    std::ifstream ifs(mfn, std::ios::binary);
-    if (!ifs) {
-        std::cerr << "Error: Failed to open map." << std::endl;
-        Quit();
-    }
-
-    ifs.seekg(0, std::ios::end);
-    int file_size = ifs.tellg();
-    int map_size = kMapHeight * kMapDepth * kMapWidth;
-    if (file_size < map_size) {
-        std::cerr << "Error: Failed to load map." << std::endl;
-        Quit();
-    }
-
-    ifs.seekg(0);
-    ifs.read(world_map_, map_size);
-}
-
-void Game::SaveMap(int mid) {
-    std::string mfn = ToMapFileName(mid);
-
-    std::ofstream ofs(mfn, std::ios::binary);
-    if (!ofs) {
-        std::cerr << "Error: Failed to open map." << std::endl;
-        Quit();
-    }
-
-    int map_size = kMapHeight * kMapDepth * kMapWidth;
-    ofs.write(world_map_, map_size);
-}
-
-void Game::LoadTexs() {
-    unsigned long tw, th, err = 0;
-    for (int i = 0; kNTexs > i; i++) {
-        texs_[i].resize(kTexWidth * kTexHeight);
-        err |= QuickCG::loadImage(texs_[i], tw, th, kTexDir + kTexFiles[i]);
-    }
-   if (err) {
-        std::cerr << "Error: Failed to load textures." << std::endl;
-        Quit();
-    }
 }
 
 void Game::InitPlayer() {
@@ -256,13 +189,11 @@ bool Game::CastRay(int x, int y, Ray &ray) const {
         else {
             break;
         }
-        if (ray.pos.x < 0 || ray.pos.x >= kMapWidth ||
-            ray.pos.y < 0 || ray.pos.y >= kMapHeight ||
-            ray.pos.z < 0 || ray.pos.z >= kMapDepth) {
+        if (ray.pos.x < 0 || ray.pos.y < 0 || ray.pos.z < 0) {
             break;
         }
-        int block = GetMapBlock(ray.pos);
-        hit = block != kAirBlock && block != kTransparentBlock;
+        const auto *block = world_.GetBlock(ray.pos);
+        hit = block->GetBID() != Block::kAirBlock;
     }
 
     if (ray.collision_side == 0) {
@@ -282,7 +213,7 @@ bool Game::CastRay(int x, int y, Ray &ray) const {
 }
 
 uint32_t Game::CalcPixelColor(const Ray &ray) const {
-    char block = GetMapBlock(ray.pos);
+    const auto *block = world_.GetBlock(ray.pos);
     float wall_x, wall_y;
     if (ray.collision_side == 0) {
         wall_x = pos_.z + ray.perp_wall_dist * ray.dir.z;
@@ -299,39 +230,39 @@ uint32_t Game::CalcPixelColor(const Ray &ray) const {
     wall_x -= floor(wall_x);
     wall_y -= floor(wall_y);
 
-    int tex_x = wall_x * kTexWidth;
-    int tex_y = wall_y * kTexHeight;
-    int face;
+    int tex_x = wall_x * Texture::kTextureWidth;
+    int tex_y = wall_y * Texture::kTextureHeight;
+    BlockSurface surface;
     if (ray.collision_side == 0) {
         if (ray.dir.x > 0) {
-            tex_x = kTexWidth - tex_x - 1;
-            face = 0;
+            tex_x = Texture::kTextureWidth - tex_x - 1;
+            surface = BlockSurface::YZ_Higher;
         }
         else {
-            face = 1;
+            surface = BlockSurface::YZ_Lower;
         }
     }
     if (ray.collision_side == 1) {
         if (ray.dir.y > 0) {
-            tex_x = kTexWidth - tex_x - 1;
-            face = 2;
+            tex_x = Texture::kTextureWidth - tex_x - 1;
+            surface = BlockSurface::XZ_Higher;
         }
         else {
-            face = 3;
+            surface = BlockSurface::XZ_Lower;
         }
     }
     if (ray.collision_side == 2) {
         if (ray.dir.z < 0) {
-            tex_x = kTexWidth - tex_x - 1;
-            face = 4;
+            tex_x = Texture::kTextureWidth - tex_x - 1;
+            surface = BlockSurface::XY_Higher;
         }
         else {
-            face = 5;
+            surface = BlockSurface::XY_Lower;
         }
     }
 
-    int tex = GetTex(block, face);
-    uint32_t color = GetTexColor(tex, tex_x, kTexHeight - tex_y - 1);
+    const auto *tex = block->GetTexture(surface);
+    uint32_t color = tex->GetPixel(tex_x, Texture::kTextureHeight - tex_y - 1);
     if (ray.collision_side == 1 || ray.collision_side == 2) {
         color = (color >> 1) & 0x7F7F7F;
     }
@@ -395,7 +326,7 @@ void Game::HandleKeys() {
         TryMoveZ(mvdir.z);
     }
 
-    int n_visible_blocks = kNBlocks - 2;
+    int n_visible_blocks = Block::kNBlocks - 1;
     if (QuickCG::keyPressed(SDLK_RIGHT)) {
         select_block_ = select_block_ % n_visible_blocks + 1;
     }
@@ -427,7 +358,7 @@ void Game::OnLeftButtonPress() {
     if (!hit || ray.perp_wall_dist > kPlayerDestBlockDist) {
         return;
     }
-    SetMapBlock(ray.pos, kAirBlock);
+    world_.SetBlock(ray.pos, Block::GetBlock(Block::kAirBlock));
 }
 
 void Game::OnRightButtonPress() {
@@ -447,9 +378,9 @@ void Game::OnRightButtonPress() {
         block_pos.z += ray.dir.z < 0 ? 1 : -1;
     }
 
-    assert(GetMapBlock(block_pos) == 0);
+    assert(world_.GetBlock(block_pos)->GetBID() == Block::kAirBlock);
 
-    SetMapBlock(block_pos, select_block_);
+    world_.SetBlock(block_pos, Block::GetBlock(select_block_));
     hit = HitBlock({
         glm::ivec3(0, 0, 0), glm::ivec3(0, 0, 1),
         glm::ivec3(0, 1, 0), glm::ivec3(0, 1, 1),
@@ -459,7 +390,7 @@ void Game::OnRightButtonPress() {
         glm::ivec3(1, 2, 0), glm::ivec3(1, 2, 1),
     });
     if (hit) {
-        SetMapBlock(block_pos, kAirBlock);
+        world_.SetBlock(block_pos, Block::GetBlock(Block::kAirBlock));
     }
 }
 
@@ -504,7 +435,7 @@ glm::ivec3 Game::GetPlayerPartPos(const glm::ivec3 &part) const {
 bool Game::HitBlock(const std::vector<glm::ivec3> &parts) const {
     bool hit = false;
     for (const glm::ivec3 &part : parts) {
-        hit |= GetMapBlock(GetPlayerPartPos(part)) != kAirBlock;
+        hit |= world_.GetBlock(GetPlayerPartPos(part))->GetBID() != Block::kAirBlock;
     }
     return hit;
 }
@@ -556,8 +487,7 @@ void Game::TryMoveZ(float mvz) {
 }
 
 void Game::Quit() {
-    // TODO: LoadされていないMapはSaveしない
-    SaveMap(0);
+    world_.Save();
     delete buffer_;
     QuickCG::end();
 }
