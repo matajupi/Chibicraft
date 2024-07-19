@@ -160,7 +160,7 @@ void Game::LoadTexs() {
 
 void Game::InitPlayer() {
     // y = 1だったら、床にへばりついている状態なので、床が単色になる(それはそう)
-    pos_ = glm::vec3(21.0, 3.5, 11.5);
+    pos_ = glm::vec3(1.5, 3.5, 1.5);
     dir_ = glm::vec3(0.0, 0.0, 1.0);
     plane_x_ = glm::vec3(0.66, 0.0, 0.0);
     plane_y_ = glm::vec3(0.0, 0.4125, 0.0);
@@ -347,7 +347,7 @@ uint32_t Game::CalcPixelColor(const Ray &ray) const {
 }
 
 void Game::SimpleRaycasting() {
-#pragma omp parallel for
+#pragma omp parallel for num_threads(4)
     for (int y = 0; screen_height_ > y; y++) {
         for (int x = 0; screen_width_ > x; x++) {
             Ray ray;
@@ -364,7 +364,7 @@ void Game::SimpleRaycasting() {
 }
 
 void Game::SlackOffRaycasting() {
-#pragma omp parallel for
+#pragma omp parallel for num_threads(4)
     for (int y = 1; screen_height_ > y; y += 3) {
         for (int x = 1; screen_width_ > x; x += 3) {
             Ray ray;
@@ -389,7 +389,7 @@ void Game::SlackOffRaycasting() {
 }
 
 void Game::HandleKeys() {
-    float move_speed = frame_time_ * 3.0;
+    float move_speed = frame_time_ * 5.0;
 
     glm::vec3 perdir = glm::normalize(plane_x_);
     glm::vec3 mvdir(0, 0, 0);

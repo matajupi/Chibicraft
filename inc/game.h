@@ -96,11 +96,11 @@ private:
     // ======== Player ========
     static constexpr const float kPlayerHalfWidth = 0.3;
     static constexpr const float kPlayerHalfDepth = 0.3;
-    static constexpr const float kPlayerUpperHalfHeight = 0.3;
-    static constexpr const float kPlayerLowerHalfHeight = 1.3;
+    static constexpr const float kPlayerUpperHalfHeight = 0.1;
+    static constexpr const float kPlayerLowerHalfHeight = 1.5;
 
-    static constexpr const float kPlayerPutBlockDist = 3.5;
-    static constexpr const float kPlayerDestBlockDist = 3.5;
+    static constexpr const float kPlayerPutBlockDist = 4.5;
+    static constexpr const float kPlayerDestBlockDist = 4.5;
 
     glm::vec3 pos_, dir_, plane_x_, plane_y_;
     int select_block_ = 1;
