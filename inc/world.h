@@ -9,7 +9,8 @@
 
 // TODO: Chunk page out algorithm
 class World {
-    mutable std::map<CID_T, Chunk> chunks_;
+    // mutable std::map<CID_T, Chunk> chunks_;
+    mutable BID_T buffer_[kWorldBufferHeight * kWorldBufferWidth * kWorldBufferDepth];
 
     CID_T TransPos(const glm::ivec3 &pos, glm::ivec3 &chpos) const;
     Chunk &GetChunk(CID_T cid) const;
