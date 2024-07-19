@@ -14,7 +14,7 @@ static const int kCursorWidth = 30;
 
 class Game {
 public:
-    Game() : Game(-1, -1, false) { }
+    Game() : Game(-1, -1, true) { }
     Game(int screen_width, int screen_height, bool fullscreen = true);
     void Start();
 
