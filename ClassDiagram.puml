@@ -1,12 +1,13 @@
 @startuml
 
 class Texture {
-    - {static} std::map<TID_T, Texture *> texture_table_
+    - {static} std::vector<Texture> texture_table_
 
-    + Texture(TID_T tid)
+    - Texture(TID_T tid)
     + uint32_t GetPixel(int x, int y) const
     + void Load()
-    + {static} cosnt Texture *GetTexture(TID_T tid)
+
+    + {static} Texture GetTexture(TID_T tid)
 }
 
 enum BlockSurface {
@@ -17,60 +18,43 @@ enum BlockSurface {
     YZ_Lower
     YZ_Higher
 }
-
 class Block {
-    - {static} std::map<BID_T, Block *> block_table_
+    - {static} std::vector<Block> block_table_
 
-    + Block(BID_T bid)
-    + const Texture *GetTexture(BlockSurface surface)
-    + {static} const Block *GetBlock(BID_T bid)
+    - Block(int bid)
+    + Texture GetTexture(BlockSurface surface) const
+
+    + {static} Block GetBlock(BID_T bid)
 }
 
-Block --> "use" Texture
-Block --> "use" BlockSurface
-
 class World {
-    - std::vector<Chunk> chunks_
-    - BID_T contents_[kWorldHeight][kWorldWidth][kWorldDepth]
+    + const int kWorldHeight
+    + const int kWorldWidth
+    + const int kWorldDepth
 
-    + const BID_T GetBlock(const glm::ivec3 &pos) const
-    + void SetBlock(const glm::ivec3 &pos, const BID_T bid)
+    - std::vector<Chunk> chunks_
+    - BID_T map_[kWorldHeight][kWorldWidth][kWorldDepth]
+
+    + const Block &GetBlock(const glm::ivec3 &pos) const
+    + void SetBlock(const glm::ivec3 &pos, const Block &block)
+    - glm::ivec3 TransCoord(const glm::ivec3 &pos) const
 }
 class Chunk {
     + const int kChunkHeight
     + const int kChunkWidth
     + const int kChunkDepth
 
-    - BID_T contents_[kChunkHeight][kChunkWidth][kChunkDepth]
+    - char contents_[kHeight][kWidth][kDepth]
 
-    + Chunk(CID_T cid)
+    + Chunk(int cid)
     + bool Exists() const
     + void Generate()
     + void Load()
     + void Save()
 }
 
-World o--> Chunk
-Chunk --> "use" Block
-
-class Ray {
-    + bool Cast(int x, int y, const Player &player, const World &world) const
-}
 abstract Raycaster {
-    + {abstract} void Raycasting(Screen &screen, const Player &player, const World &world)
+    + void Raycasting(const Player &player, const World &world)
 }
-class SimpleRaycaster {
-    + void Raycasting(Screen &screen, const Player &player, const World &world)
-}
-class CrossRaycaster {
-    + void Raycasting(Screen &screen, const Player &player, const World &world)
-}
-
-SimpleRaycaster --|> Raycaster
-CrossRaycaster --|> Raycaster
-SimpleRaycaster --> "use" Ray
-
-class Screen { }
-class Player { }
 
 @enduml
