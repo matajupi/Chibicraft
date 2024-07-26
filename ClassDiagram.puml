@@ -7,7 +7,7 @@ class Texture {
     + uint32_t GetPixel(int x, int y) const
     + void Load()
 
-    + {static} Texture GetTexture(TID_T tid)
+    + {static} const Texture *GetTexture(TID_T tid)
 }
 
 enum BlockSurface {
@@ -22,9 +22,9 @@ class Block {
     - {static} std::vector<Block> block_table_
 
     - Block(int bid)
-    + Texture GetTexture(BlockSurface surface) const
+    + const Texture *GetTexture(BlockSurface surface) const
 
-    + {static} Block GetBlock(BID_T bid)
+    + {static} const Block *GetBlock(BID_T bid)
 }
 
 class World {
@@ -35,8 +35,8 @@ class World {
     - std::vector<Chunk> chunks_
     - BID_T map_[kWorldHeight][kWorldWidth][kWorldDepth]
 
-    + const Block &GetBlock(const glm::ivec3 &pos) const
-    + void SetBlock(const glm::ivec3 &pos, const Block &block)
+    + const Block *GetBlock(const glm::ivec3 &pos) const
+    + void SetBlock(const glm::ivec3 &pos, const Block *block)
     - glm::ivec3 TransCoord(const glm::ivec3 &pos) const
 }
 class Chunk {
@@ -44,7 +44,7 @@ class Chunk {
     + const int kChunkWidth
     + const int kChunkDepth
 
-    - char contents_[kHeight][kWidth][kDepth]
+    - char contents_[kChunkHeight][kChunkWidth][kChunkDepth]
 
     + Chunk(int cid)
     + bool Exists() const
@@ -52,7 +52,6 @@ class Chunk {
     + void Load()
     + void Save()
 }
-
 abstract Raycaster {
     + void Raycasting(const Player &player, const World &world)
 }
