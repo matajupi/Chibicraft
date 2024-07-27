@@ -3,7 +3,6 @@
 #include <cstdio>
 #include <cmath>
 #include <cassert>
-#include <exception>
 
 #include <X11/Xlib.h>
 
@@ -79,8 +78,7 @@ void Game::Start() {
 void Game::Init() {
     InitScreen();
     InitPlayer();
-
-    // std::set_terminate([&](){ Quit(); });
+world_.Init();
 }
 
 void Game::InitScreen() {
@@ -230,12 +228,12 @@ uint32_t Game::CalcPixelColor(const Ray &ray) const {
     wall_x -= floor(wall_x);
     wall_y -= floor(wall_y);
 
-    int tex_x = wall_x * Texture::kTextureWidth;
-    int tex_y = wall_y * Texture::kTextureHeight;
+    int tex_x = wall_x * Texture::kWidth;
+    int tex_y = wall_y * Texture::kHeight;
     BlockSurface surface;
     if (ray.collision_side == 0) {
         if (ray.dir.x > 0) {
-            tex_x = Texture::kTextureWidth - tex_x - 1;
+            tex_x = Texture::kWidth - tex_x - 1;
             surface = BlockSurface::YZ_Higher;
         }
         else {
@@ -244,7 +242,7 @@ uint32_t Game::CalcPixelColor(const Ray &ray) const {
     }
     if (ray.collision_side == 1) {
         if (ray.dir.y > 0) {
-            tex_x = Texture::kTextureWidth - tex_x - 1;
+            tex_x = Texture::kWidth - tex_x - 1;
             surface = BlockSurface::XZ_Higher;
         }
         else {
@@ -253,7 +251,7 @@ uint32_t Game::CalcPixelColor(const Ray &ray) const {
     }
     if (ray.collision_side == 2) {
         if (ray.dir.z < 0) {
-            tex_x = Texture::kTextureWidth - tex_x - 1;
+            tex_x = Texture::kWidth - tex_x - 1;
             surface = BlockSurface::XY_Higher;
         }
         else {
@@ -262,7 +260,7 @@ uint32_t Game::CalcPixelColor(const Ray &ray) const {
     }
 
     const auto *tex = block->GetTexture(surface);
-    uint32_t color = tex->GetPixel(tex_x, Texture::kTextureHeight - tex_y - 1);
+    uint32_t color = tex->GetPixel(tex_x, Texture::kHeight - tex_y - 1);
     if (ray.collision_side == 1 || ray.collision_side == 2) {
         color = (color >> 1) & 0x7F7F7F;
     }

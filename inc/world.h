@@ -1,23 +1,24 @@
 #pragma once
 
-#include <map>
 #include <vector>
 #include <glm/glm.hpp>
 
-#include "chunk.h"
 #include "block.h"
 
-// TODO: Chunk page out algorithm
+// TODO: Manage chunks
 class World {
-    mutable std::map<CID_T, Chunk> chunks_;
-    mutable BID_T contents_[kWorldBufferHeight * kWorldBufferWidth * kWorldBufferDepth];
+public:
+    static constexpr const int kHeight = 64;
+    static constexpr const int kWidth = 64;
+    static constexpr const int kDepth = 64;
 
-    CID_T TransPos(const glm::ivec3 &pos, glm::ivec3 &chpos) const;
-    Chunk &GetChunk(CID_T cid) const;
+private:
+    mutable BID_T map_[kHeight * kWidth * kDepth];
 
 public:
     const Block *GetBlock(const glm::ivec3 &pos) const;
     void SetBlock(const glm::ivec3 &pos, const Block *block);
     void Save();
+void Init();
 };
 

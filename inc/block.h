@@ -18,8 +18,8 @@ enum class BlockSurface {
 
 class Block {
 public:
-    static constexpr const BID_T kAirBlock = 0;
     static constexpr const int kNBlocks = 4;
+    static constexpr const BID_T kAirBlock = 0;
 
 private:
     static std::array<Block, kNBlocks> block_table_;

@@ -6,7 +6,7 @@
 
 #include "quickcg.h"
 
-const std::string Texture::kTextureDefaultDirectory
+const std::string Texture::kDefaultDirectory
     = "bedrock-samples/resource_pack/textures/blocks/";
 
 std::array<Texture, Texture::kNTextures> Texture::texture_table_ = {
@@ -19,17 +19,18 @@ std::array<Texture, Texture::kNTextures> Texture::texture_table_ = {
 };
 
 Texture::Texture(TID_T tid, std::string name)
-    : tid_(tid), name_(name), loaded_(false) {
-    contents_.resize(kTextureWidth * kTextureHeight);
+    : tid_(tid), name_(name) {
+    contents_.resize(kWidth * kHeight);
+    Load();
 }
 
 uint32_t Texture::GetPixel(int x, int y) const {
-    assert(0 <= x && x < kTextureWidth && 0 <= y && y < kTextureHeight);
-    return contents_[y * kTextureWidth + x];
+    assert(0 <= x && x < kWidth && 0 <= y && y < kHeight);
+    return contents_[y * kWidth + x];
 }
 
 void Texture::Load() {
-    std::string path = kTextureDefaultDirectory + name_;
+    std::string path = kDefaultDirectory + name_;
 
     unsigned long tw, th;
     int err =  QuickCG::loadImage(contents_, tw, th, path);
@@ -41,11 +42,6 @@ void Texture::Load() {
 
 const Texture *Texture::GetTexture(TID_T tid) {
     assert(0 <= tid && tid < kNTextures);
-    Texture &tex = texture_table_[tid];
-    if (!tex.loaded_) {
-        tex.Load();
-        tex.loaded_ = true;
-    }
-    return &tex;
+    return &texture_table_[tid];
 }
 
