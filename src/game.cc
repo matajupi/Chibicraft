@@ -413,8 +413,8 @@ void Game::SimpleRaycasting() {
 
 void Game::SlackOffRaycasting() {
 #pragma omp parallel for num_threads(4)
-    for (int y = 1; screen_height_ > y; y += 3) {
-        for (int x = 1; screen_width_ > x; x += 3) {
+    for (int y = 1; screen_height_ - 1 > y; y += 3) {
+        for (int x = 1; screen_width_ - 1 > x; x += 3) {
             Ray ray;
             bool hit = CastRay(x, y, ray);
             if (hit) {
