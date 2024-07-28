@@ -20,12 +20,12 @@ public:
 
 private:
     // ======== Map ========
-    static constexpr const int kMapWidth = 26;
-    static constexpr const int kMapDepth = 26;
-    static constexpr const int kMapHeight = 8;
+    static constexpr const int kMapWidth = 64;
+    static constexpr const int kMapDepth = 64;
+    static constexpr const int kMapHeight = 64;
 
     // AirBlock, TransparentBlockもBlockとして含む
-    static constexpr const int kNBlocks = 10;
+    static constexpr const int kNBlocks = 20;
     static constexpr const int kAirBlock = 0;
     static constexpr const int kTransparentBlock = kNBlocks - 1;
 
@@ -57,7 +57,7 @@ private:
     void SaveMap(int mid);
 
     // ======== Textures ========
-    static constexpr const int kNTexs = 6;
+    static constexpr const int kNTexs = 20;
 
     static constexpr const int kTexWidth = 16;
     static constexpr const int kTexHeight = 16;
@@ -65,10 +65,11 @@ private:
     static const std::string kTexDir;
     static const std::array<std::string, kNTexs> kTexFiles;
     static const std::array<long long int, kNBlocks> kBlockToTexs;
+    static const std::array<std::string, kNBlocks> kBlockName;
     std::vector<uint32_t> texs_[kNTexs];
 
     // face: ブロックの面
-    // 0: x-面, 1: x+面, 2: y-面, 3: y+面, 4: z-面, 5: z+面
+    // 0: x+面, 1: x-面, 2: y+面, 3: y-面, 4: z+面, 5: z-面
     int GetTex(int block, int face) const {
         assert(0 <= block && block < kNBlocks && 0 <= face && face < 6);
         return kBlockToTexs[block] >> (face * 8) & 0xff;
@@ -81,7 +82,7 @@ private:
     void LoadTexs();
 
     // ======== Ray ========
-    static constexpr const int kMaxRayDist = 30;
+    static constexpr const int kMaxRayDist = 60;
 
     struct Ray {
         glm::vec3 dir;
@@ -99,8 +100,8 @@ private:
     static constexpr const float kPlayerUpperHalfHeight = 0.1;
     static constexpr const float kPlayerLowerHalfHeight = 1.5;
 
-    static constexpr const float kPlayerPutBlockDist = 4.5;
-    static constexpr const float kPlayerDestBlockDist = 4.5;
+    static constexpr const float kPlayerPutBlockDist = 5.0;
+    static constexpr const float kPlayerDestBlockDist = 5.0;
 
     glm::vec3 pos_, dir_, plane_x_, plane_y_;
     int select_block_ = 1;

@@ -59,25 +59,71 @@ namespace {
 
 const std::string Game::kTexDir = "bedrock-samples/resource_pack/textures/blocks/";
 const std::array<std::string, Game::kNTexs> Game::kTexFiles = {
-    "grass_carried.png",            // 0
-    "grass_side_carried.png",       // 1
-    "dirt.png",                     // 2
-    "planks_big_oak.png",           // 3
-    "quartz_block_chiseled_top.png",// 4
-    "quartz_block_chiseled.png",    // 5
+    "grass_carried.png",            // 0x00
+    "grass_side_carried.png",       // 0x01
+    "dirt.png",                     // 0x02
+    "planks_big_oak.png",           // 0x03
+    "quartz_block_chiseled_top.png",// 0x04
+    "quartz_block_chiseled.png",    // 0x05
+    "brick.png",                    // 0x06
+    "cherry_log_top.png",           // 0x07
+    "cherry_log_side.png",          // 0x08
+    "cherry_planks.png",            // 0x09
+    "cherry_leaves_opaque.png",     // 0x0a
+    "coal_block.png",               // 0x0b
+    "cracked_nether_bricks.png",    // 0x0c
+    "crafting_table_front.png",     // 0x0d
+    "crafting_table_side.png",      // 0x0e
+    "crafting_table_top.png",       // 0x0f
+    "planks_oak.png",               // 0x10
+    "cherry_leaves_opaque.png",     // 0x0a
+    "cherry_leaves_opaque.png",     // 0x0a
+    "cherry_leaves_opaque.png",     // 0x0a
 };
 // 6面を6byteで指定
 const std::array<long long int, Game::kNBlocks> Game::kBlockToTexs = {
     0xffffffffffff,                 // Air
     0x010100020101,                 // Grass
-    0x030303030303,                 // Oak plank
+    0x030303030303,                 // Big oak plank
     0x050504040505,                 // Quartz block chiseled
+    0x060606060606,                 // Brick
+    0x080807070808,                 // Cherry log
+    0x090909090909,                 // Cherry plank
+    0x0a0a0a0a0a0a,                 // Cherry leaves
+    0x0b0b0b0b0b0b,                 // Coal block
+    0x0c0c0c0c0c0c,                 // Cracked nether bricks
+    0x0d0d0f100e0e,                 // Crafting table
+    0x010100020101,                 // Grass
+    0x010100020101,                 // Grass
+    0x010100020101,                 // Grass
     0x010100020101,                 // Grass
     0x010100020101,                 // Grass
     0x010100020101,                 // Grass
     0x010100020101,                 // Grass
     0x010100020101,                 // Grass
     0xffffffffffff,                 // Transparent
+};
+const std::array<std::string, Game::kNBlocks> Game::kBlockName = {
+    "Air",
+    "Grass",
+    "Big oak plank",
+    "Quartz block chiseled",
+    "Brick",
+    "Cherry log",
+    "Cherry plank",
+    "Cherry leaves",
+    "Coal block",
+    "Cracked nether brick",
+    "Crafting table",
+    "Reserved1",
+    "Reserved2",
+    "Reserved3",
+    "Reserved4",
+    "Reserved5",
+    "Reserved6",
+    "Reserved7",
+    "Reserved8",
+    "Transparent",
 };
 
 Game::Game(int screen_width, int screen_height, bool fullscreen)
@@ -151,16 +197,17 @@ void Game::LoadTexs() {
     for (int i = 0; kNTexs > i; i++) {
         texs_[i].resize(kTexWidth * kTexHeight);
         err |= QuickCG::loadImage(texs_[i], tw, th, kTexDir + kTexFiles[i]);
-    }
-   if (err) {
-        std::cerr << "Error: Failed to load textures." << std::endl;
-        Quit();
+        if (err) {
+            std::cerr << "Error: Failed to load textures: "
+                << kTexFiles[i] << std::endl;
+            Quit();
+        }
     }
 }
 
 void Game::InitPlayer() {
     // y = 1だったら、床にへばりついている状態なので、床が単色になる(それはそう)
-    pos_ = glm::vec3(1.5, 3.5, 1.5);
+    pos_ = glm::vec3(31.5, 3.5, 31.5);
     dir_ = glm::vec3(0.0, 0.0, 1.0);
     plane_x_ = glm::vec3(0.66, 0.0, 0.0);
     plane_y_ = glm::vec3(0.0, 0.4125, 0.0);
@@ -176,9 +223,9 @@ void Game::Update() {
     old_time_ = time_;
     time_ = QuickCG::getTicks();
     frame_time_ = (time_ - old_time_) / 1000.0;
-    QuickCG::print(1.0 / frame_time_);
+    QuickCG::print(1.0 / frame_time_, 20, 20, QuickCG::RGB_Black);
 
-    QuickCG::print(select_block_, 0, 20);
+    QuickCG::print(kBlockName[select_block_], 20, 40, QuickCG::RGB_Black);
 
     QuickCG::redraw();
 }
