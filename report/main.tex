@@ -1,0 +1,68 @@
+\documentclass[dvipdfmx]{jsarticle}
+
+\usepackage{silence}
+\WarningFilter{caption}{Unknown document}
+
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{amsthm}
+\usepackage{ascmac}
+\usepackage{bm}
+\usepackage{float}
+\usepackage{graphicx}
+\usepackage{hyperref}
+\usepackage{latexsym}
+\usepackage{listings}
+\usepackage{mathtools}
+\usepackage{multicol}
+\usepackage{subcaption}
+\usepackage{tcolorbox}
+\usepackage{xcolor}
+
+\makeatletter
+% 図番号を"<章番号>.<図番号>" へ
+\renewcommand{\thefigure}{\thesubsection.\arabic{figure}}
+\renewcommand{\thetable}{\thesubsection.\arabic{table}}
+% 章が進むごとに図番号をリセットする
+\@addtoreset{figure}{section}
+\@addtoreset{table}{section}
+\@addtoreset{figure}{subsection}
+\@addtoreset{table}{subsection}
+\makeatother
+% TODO
+\newcommand{\todo}[1]{\textcolor{magenta}{TODO: #1}}
+% ソースコードの表示設定
+\lstset{
+    language={Python},
+    basicstyle={\ttfamily\small},
+    keywordstyle={\color{blue}},
+    commentstyle={\color{green}},
+    stringstyle=\color{red},
+    tabsize=4,
+    breaklines=true,
+}
+
+% Title
+\title{情報基礎2 ミニプロジェクト}
+\author{
+    慶應義塾大学 環境情報学部 \\
+    72375699 二又康輔
+}
+\date{\today}
+
+% Document
+\begin{document}
+\maketitle
+
+% Contents
+\section{作品のタイトルと概要}
+Minecraftをできるだけ0から作った。
+言語はC++で書かれており、3D描画に特化したライブラリやLLM等は一切利用していない。
+
+\section{環境構築}
+
+\section{動作ガイド}
+
+\section{プログラム中のアピールしたい点}
+
+\end{document}
