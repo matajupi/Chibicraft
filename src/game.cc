@@ -8,9 +8,7 @@
 #define GLM_ENABLE_EXPERIMENTAL
 #include <glm/gtx/rotate_vector.hpp>
 
-#ifdef X11_EXISTS
 #include <X11/Xlib.h>
-#endif // X11_EXISTS
 
 #include "quickcg.h"
 
@@ -49,7 +47,6 @@ namespace {
     };
 
     void GetScreenResolution(int &width, int &height) {
-#ifdef X11_EXISTS
         Display* disp = XOpenDisplay(NULL);
         Screen*  scrn = DefaultScreenOfDisplay(disp);
 
@@ -57,10 +54,6 @@ namespace {
         height = scrn->height;
 
         XCloseDisplay(disp);
-#else
-        width = 1920;
-        height = 1200;
-#endif // X11_EXISTS
     }
 }
 
