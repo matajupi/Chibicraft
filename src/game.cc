@@ -76,9 +76,10 @@ const std::array<std::string, Game::kNTexs> Game::kTexFiles = {
     "crafting_table_side.png",      // 0x0e
     "crafting_table_top.png",       // 0x0f
     "planks_oak.png",               // 0x10
-    "cherry_leaves_opaque.png",     // 0x0a
-    "cherry_leaves_opaque.png",     // 0x0a
-    "cherry_leaves_opaque.png",     // 0x0a
+    "stone.png",                    // 0x11
+    "tnt_top.png",                  // 0x12
+    "tnt_bottom.png",               // 0x13
+    "tnt_side.png",                 // 0x14
 };
 // 6面を6byteで指定
 const std::array<long long int, Game::kNBlocks> Game::kBlockToTexs = {
@@ -93,14 +94,14 @@ const std::array<long long int, Game::kNBlocks> Game::kBlockToTexs = {
     0x0b0b0b0b0b0b,                 // Coal block
     0x0c0c0c0c0c0c,                 // Cracked nether bricks
     0x0d0d0f100e0e,                 // Crafting table
-    0x010100020101,                 // Grass
-    0x010100020101,                 // Grass
-    0x010100020101,                 // Grass
-    0x010100020101,                 // Grass
-    0x010100020101,                 // Grass
-    0x010100020101,                 // Grass
-    0x010100020101,                 // Grass
-    0x010100020101,                 // Grass
+    0x111111111111,                 // Stone
+    0x141412131414,                 // TNT
+    0x010100020101,                 // Reserved
+    0x010100020101,                 // Reserved
+    0x010100020101,                 // Reserved
+    0x010100020101,                 // Reserved
+    0x010100020101,                 // Reserved
+    0x010100020101,                 // Reserved
     0xffffffffffff,                 // Transparent
 };
 const std::array<std::string, Game::kNBlocks> Game::kBlockName = {
@@ -115,14 +116,14 @@ const std::array<std::string, Game::kNBlocks> Game::kBlockName = {
     "Coal block",
     "Cracked nether brick",
     "Crafting table",
+    "Stone",
+    "TNT",
     "Reserved1",
     "Reserved2",
     "Reserved3",
     "Reserved4",
     "Reserved5",
     "Reserved6",
-    "Reserved7",
-    "Reserved8",
     "Transparent",
 };
 
@@ -207,7 +208,7 @@ void Game::LoadTexs() {
 
 void Game::InitPlayer() {
     // y = 1だったら、床にへばりついている状態なので、床が単色になる(それはそう)
-    pos_ = glm::vec3(31.5, 3.5, 31.5);
+    pos_ = glm::vec3(kMapWidth / 2, kMapHeight / 2 + 3.5, kMapDepth / 2);
     dir_ = glm::vec3(0.0, 0.0, 1.0);
     plane_x_ = glm::vec3(0.66, 0.0, 0.0);
     plane_y_ = glm::vec3(0.0, 0.4125, 0.0);

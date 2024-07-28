@@ -57,7 +57,7 @@ private:
     void SaveMap(int mid);
 
     // ======== Textures ========
-    static constexpr const int kNTexs = 20;
+    static constexpr const int kNTexs = 21;
 
     static constexpr const int kTexWidth = 16;
     static constexpr const int kTexHeight = 16;
