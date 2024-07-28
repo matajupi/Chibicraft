@@ -358,7 +358,7 @@ uint32_t Game::CalcPixelColor(const Ray &ray) const {
 
     int tex_x = wall_x * kTexWidth;
     int tex_y = wall_y * kTexHeight;
-    int face;
+    int face = 0;
     if (ray.collision_side == 0) {
         if (ray.dir.x > 0) {
             tex_x = kTexWidth - tex_x - 1;

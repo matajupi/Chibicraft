@@ -1,7 +1,7 @@
 #include <cstdlib>
 #include "game.h"
 
-int main(int argc, char **argv) {
+int main() {
     // Game game(960, 600, false);
     Game game;
     game.Start();
