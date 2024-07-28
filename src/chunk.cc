@@ -6,6 +6,8 @@
 #include <cassert>
 #include <exception>
 
+using namespace chibicraft;
+
 const std::string Chunk::kDefaultChunkDirectory = "data/chunks/";
 
 BID_T Chunk::GetBlock(int x, int y, int z) const {

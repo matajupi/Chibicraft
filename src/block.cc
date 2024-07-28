@@ -2,6 +2,8 @@
 
 #include <cassert>
 
+using namespace chibicraft;
+
 // order: z- z+ y- y+ x- x+
 std::array<Block, Block::kNBlocks> Block::block_table_ = {
     Block(0, "air", { -1, -1, -1, -1, -1, -1 }),

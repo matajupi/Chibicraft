@@ -1,5 +1,7 @@
 #include "world.h"
 
+using namespace chibicraft;
+
 const Block *World::GetBlock(const glm::ivec3 &pos) const {
     if (pos.x < 0 || pos.x >= kWidth ||
         pos.y < 0 || pos.y >= kHeight ||

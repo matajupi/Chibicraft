@@ -4,134 +4,61 @@
 #include <cmath>
 #include <cassert>
 
-#include <X11/Xlib.h>
-
 #define GLM_ENABLE_EXPERIMENTAL
 #include <glm/gtx/rotate_vector.hpp>
 
 #include "quickcg.h"
 
-namespace {
-    const char kCursorShape[kCursorHeight][kCursorWidth + 1] = {
-        "              @@              ",
-        "              @@              ",
-        "              @@              ",
-        "              @@              ",
-        "              @@              ",
-        "              @@              ",
-        "              @@              ",
-        "              @@              ",
-        "              @@              ",
-        "              @@              ",
-        "              @@              ",
-        "              @@              ",
-        "              @@              ",
-        "              @@              ",
-        "@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@",
-        "@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@",
-        "              @@              ",
-        "              @@              ",
-        "              @@              ",
-        "              @@              ",
-        "              @@              ",
-        "              @@              ",
-        "              @@              ",
-        "              @@              ",
-        "              @@              ",
-        "              @@              ",
-        "              @@              ",
-        "              @@              ",
-        "              @@              ",
-        "              @@              ",
-    };
-
-    void GetScreenResolution(int &width, int &height) {
-        Display* disp = XOpenDisplay(NULL);
-        Screen*  scrn = DefaultScreenOfDisplay(disp);
-
-        width = scrn->width;
-        height = scrn->height;
-
-        XCloseDisplay(disp);
-    }
-}
-
+using namespace chibicraft;
 
 Game::Game(int screen_width, int screen_height, bool fullscreen)
-    : fullscreen_(fullscreen), prev_lmb_(false) {
+    : prev_lmb_(false) {
     if (screen_width < 0 || screen_height < 0) {
-        GetScreenResolution(screen_width, screen_height);
+        Screen::GetDefaultResolution(screen_width, screen_height);
     }
-    screen_width_ = screen_width;
-    screen_height_ = screen_height;
+    world_ = std::make_shared<World>();
+    screen_ = std::make_shared<Screen>(screen_width, screen_height, fullscreen, "Chibigit");
+    player_ = std::make_shared<Player>();
 }
 
 void Game::Start() {
     Init();
     while (!QuickCG::done()) {
         Update();
-        HandleInput();
+        player_->HandleInput();
     }
     Quit();
 }
 
 void Game::Init() {
-    InitScreen();
-    InitPlayer();
-world_.Init();
-}
-
-void Game::InitScreen() {
-    QuickCG::screen(screen_width_, screen_height_, fullscreen_, "Chibicraft");
-    SDL_ShowCursor(false);
-
-    buffer_ = new uint32_t[screen_height_ * screen_width_];
-}
-
-void Game::InitPlayer() {
-    // y = 1だったら、床にへばりついている状態なので、床が単色になる(それはそう)
-    pos_ = glm::vec3(21.0, 3.5, 11.5);
-    dir_ = glm::vec3(0.0, 0.0, 1.0);
-    plane_x_ = glm::vec3(0.66, 0.0, 0.0);
-    plane_y_ = glm::vec3(0.0, 0.4125, 0.0);
+world_->Init();
 }
 
 void Game::Update() {
     Raycasting();
-    DrawCursor();
-
-    QuickCG::drawBuffer(buffer_);
+    screen_->DrawCursor();
 
     old_time_ = time_;
     time_ = QuickCG::getTicks();
     frame_time_ = (time_ - old_time_) / 1000.0;
-    QuickCG::print(1.0 / frame_time_);
 
-    QuickCG::print(select_block_, 0, 20);
+    screen_->Print(1.0 / frame_time_);
+    screen_->Print(player_->GetSelectBlock());
 
-    QuickCG::redraw();
-}
-
-void Game::DrawCursor() {
-    for (int y = 0; kCursorHeight > y; y++) {
-        for (int x = 0; kCursorWidth > x; x++) {
-            if (kCursorShape[y][x] == '@') {
-                SetBufColor(
-                    x + screen_width_ / 2 - kCursorWidth / 2,
-                    y + screen_height_ / 2 - kCursorHeight / 2,
-                    0x19959c
-                );
-            }
-        }
-    }
+    screen_->Update();
 }
 
 bool Game::CastRay(int x, int y, Ray &ray) const {
-    float camera_y = 2.0 * y / screen_height_ - 1;
-    float camera_x = 2.0 * x / screen_width_ - 1;
+    float camera_y = 2.0 * y / screen_->GetHeight() - 1;
+    float camera_x = 2.0 * x / screen_->GetWidth() - 1;
 
-    ray.dir = dir_ + plane_x_ * camera_x + plane_y_ * camera_y;
-    ray.pos = pos_;
+    glm::vec3 dir = player_->GetDir();
+    glm::vec3 plane_x = player->GetPlaneX();
+    glm::vec3 plane_y = player->GetPlaneY();
+    glm::vec3 pos = player->GetPos();
+
+    ray.dir = dir + plane_x * camera_x + plane_y * camera_y;
+    ray.pos = pos;
 
     float delta_dist_x = (ray.dir.x == 0) ? 1e30 : std::abs(1 / ray.dir.x);
     float delta_dist_y = (ray.dir.y == 0) ? 1e30 : std::abs(1 / ray.dir.y);
@@ -141,27 +68,27 @@ bool Game::CastRay(int x, int y, Ray &ray) const {
     float side_dist_x, side_dist_y, side_dist_z;
     if (ray.dir.x < 0) {
         step_x = -1;
-        side_dist_x = (pos_.x - ray.pos.x) * delta_dist_x;
+        side_dist_x = (pos.x - ray.pos.x) * delta_dist_x;
     }
     else {
         step_x = 1;
-        side_dist_x = (ray.pos.x + 1.0 - pos_.x) * delta_dist_x;
+        side_dist_x = (ray.pos.x + 1.0 - pos.x) * delta_dist_x;
     }
     if (ray.dir.y < 0) {
         step_y = -1;
-        side_dist_y = (pos_.y - ray.pos.y) * delta_dist_y;
+        side_dist_y = (pos.y - ray.pos.y) * delta_dist_y;
     }
     else {
         step_y = 1;
-        side_dist_y = (ray.pos.y + 1.0 - pos_.y) * delta_dist_y;
+        side_dist_y = (ray.pos.y + 1.0 - pos.y) * delta_dist_y;
     }
     if (ray.dir.z < 0) {
         step_z = -1;
-        side_dist_z = (pos_.z - ray.pos.z) * delta_dist_z;
+        side_dist_z = (pos.z - ray.pos.z) * delta_dist_z;
     }
     else {
         step_z = 1;
-        side_dist_z = (ray.pos.z + 1.0 - pos_.z) * delta_dist_z;
+        side_dist_z = (ray.pos.z + 1.0 - pos.z) * delta_dist_z;
     }
 
     bool hit = false;
@@ -190,8 +117,8 @@ bool Game::CastRay(int x, int y, Ray &ray) const {
         if (ray.pos.x < 0 || ray.pos.y < 0 || ray.pos.z < 0) {
             break;
         }
-        const auto *block = world_.GetBlock(ray.pos);
-        hit = block->GetBID() != Block::kAirBlock;
+        const auto *block = world_->GetBlock(ray.pos);
+        hit = !block->IsAir();
     }
 
     if (ray.collision_side == 0) {
@@ -211,19 +138,20 @@ bool Game::CastRay(int x, int y, Ray &ray) const {
 }
 
 uint32_t Game::CalcPixelColor(const Ray &ray) const {
-    const auto *block = world_.GetBlock(ray.pos);
+    const auto *block = world_->GetBlock(ray.pos);
     float wall_x, wall_y;
+    glm::vec3 pos = player_->GetPos();
     if (ray.collision_side == 0) {
-        wall_x = pos_.z + ray.perp_wall_dist * ray.dir.z;
-        wall_y = pos_.y + ray.perp_wall_dist * ray.dir.y;
+        wall_x = pos.z + ray.perp_wall_dist * ray.dir.z;
+        wall_y = pos.y + ray.perp_wall_dist * ray.dir.y;
     }
     else if (ray.collision_side == 1) {
-        wall_x = pos_.x + ray.perp_wall_dist * ray.dir.x;
-        wall_y = pos_.z + ray.perp_wall_dist * ray.dir.z;
+        wall_x = pos.x + ray.perp_wall_dist * ray.dir.x;
+        wall_y = pos.z + ray.perp_wall_dist * ray.dir.z;
     }
     else {
-        wall_x = pos_.x + ray.perp_wall_dist * ray.dir.x;
-        wall_y = pos_.y + ray.perp_wall_dist * ray.dir.y;
+        wall_x = pos.x + ray.perp_wall_dist * ray.dir.x;
+        wall_y = pos.y + ray.perp_wall_dist * ray.dir.y;
     }
     wall_x -= floor(wall_x);
     wall_y -= floor(wall_y);
@@ -274,219 +202,23 @@ uint32_t Game::CalcPixelColor(const Ray &ray) const {
 }
 
 void Game::Raycasting() {
-    for (int y = 0; screen_height_ > y; y++) {
-        for (int x = 0; screen_width_ > x; x++) {
+    for (int y = 0; screen_->GetHeight() > y; y++) {
+        for (int x = 0; screen_->GetWidth() > x; x++) {
             Ray ray;
             bool hit = CastRay(x, y, ray);
             if (hit) {
                 uint32_t color = CalcPixelColor(ray);
-                SetBufColor(x, screen_height_ - y - 1, color);
+                screen_->SetColor(x, screen_->GetHeight() - y - 1, color);
             }
             else {
-                SetBufColor(x, screen_height_ - y - 1, 0xFFFFFF);
+                screen_->SetColor(x, screen_->GetHeight() - y - 1, 0xFFFFFF);
             }
         }
     }
 }
 
-void Game::HandleKeys() {
-    float move_speed = frame_time_ * 2.0;
-
-    glm::vec3 perdir = glm::normalize(plane_x_);
-    glm::vec3 mvdir(0, 0, 0);
-    QuickCG::readKeys();
-    if (QuickCG::keyDown(SDLK_w)) {
-        mvdir.x += dir_.x;
-        mvdir.z += dir_.z;
-    }
-    if (QuickCG::keyDown(SDLK_s)) {
-        mvdir.x -= dir_.x;
-        mvdir.z -= dir_.z;
-    }
-    if (QuickCG::keyDown(SDLK_d)) {
-        mvdir.x += perdir.x;
-        mvdir.z += perdir.z;
-    }
-    if (QuickCG::keyDown(SDLK_a)) {
-        mvdir.x -= perdir.x;
-        mvdir.z -= perdir.z;
-    }
-    if (QuickCG::keyDown(SDLK_SPACE)) {
-        mvdir.y += 1;
-    }
-    if (QuickCG::keyDown(SDLK_LSHIFT)) {
-        mvdir.y -= 1;
-    }
-    if (glm::length(mvdir) > 0) {
-        mvdir = move_speed * glm::normalize(mvdir);
-        TryMoveX(mvdir.x);
-        TryMoveY(mvdir.y);
-        TryMoveZ(mvdir.z);
-    }
-
-    int n_visible_blocks = Block::kNBlocks - 1;
-    if (QuickCG::keyPressed(SDLK_RIGHT)) {
-        select_block_ = select_block_ % n_visible_blocks + 1;
-    }
-    if (QuickCG::keyPressed(SDLK_LEFT)) {
-        select_block_ = (select_block_ - 2 + n_visible_blocks) % n_visible_blocks + 1;
-    }
-}
-
-void Game::HandleMouseMove(int mouse_x, int mouse_y) {
-    float rot_speed = frame_time_ * 0.05;
-
-    SDL_WarpMouse(screen_width_ / 2, screen_height_ / 2);
-    if (mouse_x != screen_width_ / 2) {
-        int delta_x = mouse_x - screen_width_ / 2;
-        dir_ = glm::rotateY(dir_, rot_speed * delta_x);
-        plane_x_ = glm::rotateY(plane_x_, rot_speed * delta_x);
-        plane_y_ = glm::rotateY(plane_y_, rot_speed * delta_x);
-    }
-    if (mouse_y != screen_height_ / 2) {
-        int delta_y = mouse_y - screen_height_ / 2;
-        float angle = rot_speed * delta_y;
-        TryRotateY(angle);
-    }
-}
-
-void Game::OnLeftButtonPress() {
-    Ray ray;
-    bool hit = CastRay(screen_width_ / 2, screen_height_ / 2, ray);
-    if (!hit || ray.perp_wall_dist > kPlayerDestBlockDist) {
-        return;
-    }
-    world_.SetBlock(ray.pos, Block::GetBlock(Block::kAirBlock));
-}
-
-void Game::OnRightButtonPress() {
-    Ray ray;
-    bool hit = CastRay(screen_width_ / 2, screen_height_ / 2, ray);
-    if (!hit || ray.perp_wall_dist > kPlayerPutBlockDist) {
-        return;
-    }
-    glm::ivec3 block_pos = ray.pos;
-    if (ray.collision_side == 0) {
-        block_pos.x += ray.dir.x < 0 ? 1 : -1;
-    }
-    if (ray.collision_side == 1) {
-        block_pos.y += ray.dir.y < 0 ? 1 : -1;
-    }
-    if (ray.collision_side == 2) {
-        block_pos.z += ray.dir.z < 0 ? 1 : -1;
-    }
-
-    assert(world_.GetBlock(block_pos)->GetBID() == Block::kAirBlock);
-
-    world_.SetBlock(block_pos, Block::GetBlock(select_block_));
-    hit = HitBlock({
-        glm::ivec3(0, 0, 0), glm::ivec3(0, 0, 1),
-        glm::ivec3(0, 1, 0), glm::ivec3(0, 1, 1),
-        glm::ivec3(0, 2, 0), glm::ivec3(0, 2, 1),
-        glm::ivec3(1, 0, 0), glm::ivec3(1, 0, 1),
-        glm::ivec3(1, 1, 0), glm::ivec3(1, 1, 1),
-        glm::ivec3(1, 2, 0), glm::ivec3(1, 2, 1),
-    });
-    if (hit) {
-        world_.SetBlock(block_pos, Block::GetBlock(Block::kAirBlock));
-    }
-}
-
-void Game::HandleInput() {
-    HandleKeys();
-
-    int mouse_x, mouse_y;
-    bool lmb, rmb;
-    QuickCG::getMouseState(mouse_x, mouse_y, lmb, rmb);
-
-    HandleMouseMove(mouse_x, mouse_y);
-    if (!prev_lmb_ && lmb) {
-        OnLeftButtonPress();
-    }
-    if (!prev_rmb_ && rmb) {
-        OnRightButtonPress();
-    }
-    prev_lmb_ = lmb;
-    prev_rmb_ = rmb;
-}
-
-glm::ivec3 Game::GetPlayerPartPos(const glm::ivec3 &part) const {
-    assert(0 <= part.x && part.x <= 1 && 0 <= part.y && part.y <= 2 &&
-        0 <= part.z && part.z <= 1);
-    glm::ivec3 part_pos;
-
-    part_pos.x = pos_.x + (part.x == 0 ? -kPlayerHalfWidth : kPlayerHalfWidth);
-    if (part.y == 0) {
-        part_pos.y = pos_.y - kPlayerLowerHalfHeight;
-    }
-    else if (part.y == 1) {
-        part_pos.y = pos_.y - kPlayerLowerHalfHeight + 1.0;
-    }
-    else if (part.y == 2) {
-        part_pos.y = pos_.y + kPlayerUpperHalfHeight;
-    }
-    part_pos.z = pos_.z + (part.z == 0 ? -kPlayerHalfDepth : kPlayerHalfDepth);
-
-    return part_pos;
-}
-
-bool Game::HitBlock(const std::vector<glm::ivec3> &parts) const {
-    bool hit = false;
-    for (const glm::ivec3 &part : parts) {
-        hit |= world_.GetBlock(GetPlayerPartPos(part))->GetBID() != Block::kAirBlock;
-    }
-    return hit;
-}
-
-void Game::TryRotateY(float angle) {
-    // 視点が逆立ち -> plane_y.yが-
-    glm::vec3 new_plane_y = glm::rotate(plane_y_, angle, plane_x_);
-    if (new_plane_y.y > 0) {
-        dir_ = glm::rotate(dir_, angle, plane_x_);
-        plane_y_ = new_plane_y;
-    }
-}
-
-void Game::TryMoveX(float mvx) {
-    pos_.x += mvx;
-    int part_x = mvx < 0 ? 0 : 1;
-    bool hit = HitBlock({
-        glm::ivec3(part_x, 0, 0), glm::ivec3(part_x, 0, 1),
-        glm::ivec3(part_x, 1, 0), glm::ivec3(part_x, 1, 1),
-        glm::ivec3(part_x, 2, 0), glm::ivec3(part_x, 2, 1),
-    });
-    if (hit) {
-        pos_.x -= mvx;
-    }
-}
-
-void Game::TryMoveY(float mvy) {
-    pos_.y += mvy;
-    int part_y = mvy < 0 ? 0 : 2;
-    bool hit = HitBlock({
-        glm::ivec3(0, part_y, 0), glm::ivec3(0, part_y, 1),
-        glm::ivec3(1, part_y, 0), glm::ivec3(1, part_y, 1),
-    });
-    if (hit) {
-        pos_.y -= mvy;
-    }
-}
-
-void Game::TryMoveZ(float mvz) {
-    pos_.z += mvz;
-    int part_z = mvz < 0 ? 0 : 1;
-    bool hit = HitBlock({
-        glm::ivec3(0, 0, part_z), glm::ivec3(0, 1, part_z), glm::ivec3(0, 2, part_z),
-        glm::ivec3(1, 0, part_z), glm::ivec3(1, 1, part_z), glm::ivec3(1, 2, part_z),
-    });
-    if (hit) {
-        pos_.z -= mvz;
-    }
-}
-
 void Game::Quit() {
-    world_.Save();
-    delete buffer_;
+    world_->Save();
     QuickCG::end();
 }
 

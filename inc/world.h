@@ -5,6 +5,8 @@
 
 #include "block.h"
 
+namespace chibicraft {
+
 // TODO: Manage chunks
 class World {
 public:
@@ -12,13 +14,13 @@ public:
     static constexpr const int kWidth = 64;
     static constexpr const int kDepth = 64;
 
-private:
-    mutable BID_T map_[kHeight * kWidth * kDepth];
-
-public:
     const Block *GetBlock(const glm::ivec3 &pos) const;
     void SetBlock(const glm::ivec3 &pos, const Block *block);
     void Save();
 void Init();
+
+private:
+    mutable BID_T map_[kHeight * kWidth * kDepth];
 };
 
+}

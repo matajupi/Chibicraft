@@ -6,6 +6,8 @@
 
 #include "quickcg.h"
 
+using namespace chibicraft;
+
 const std::string Texture::kDefaultDirectory
     = "bedrock-samples/resource_pack/textures/blocks/";
 

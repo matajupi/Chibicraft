@@ -4,6 +4,8 @@
 #include <vector>
 #include <array>
 
+namespace chibicraft {
+
 using TID_T = int;
 
 class Texture {
@@ -15,6 +17,12 @@ public:
 
     static const std::string kDefaultDirectory;
 
+    TID_T GetTID() const { return tid_; }
+    std::string GetName() const { return name_; }
+    uint32_t GetPixel(int x, int y) const;
+
+    static const Texture *GetTexture(TID_T tid);
+
 private:
     static std::array<Texture, kNTextures> texture_table_;
 
@@ -25,12 +33,6 @@ private:
 
     Texture(TID_T tid, std::string name);
     void Load();
-
-public:
-    Texture() { }
-
-    TID_T GetTID() const { return tid_; }
-    std::string GetName() const { return name_; }
-    uint32_t GetPixel(int x, int y) const;
-    static const Texture *GetTexture(TID_T tid);
 };
+
+}

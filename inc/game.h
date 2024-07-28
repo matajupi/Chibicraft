@@ -7,12 +7,13 @@
 #include <fstream>
 #include <iostream>
 #include <iomanip>
+#include <memory>
 #include <glm/glm.hpp>
 
+#include "screen.h"
 #include "world.h"
 
-static const int kCursorHeight = 30;
-static const int kCursorWidth = 30;
+namespace chibicraft {
 
 class Game {
 public:
@@ -21,7 +22,9 @@ public:
     void Start();
 
 private:
-    World world_;
+    std::shared_ptr<World> world_;
+    std::shared_ptr<Screen> screen_;
+    std::shared_ptr<Player> player_;
 
     // ======== Ray ========
     static constexpr const int kMaxRayDist = 20;
@@ -35,35 +38,6 @@ private:
         float perp_wall_dist;
         float max_perp_wall_dist;
     };
-
-    // ======== Player ========
-    static constexpr const float kPlayerHalfWidth = 0.3;
-    static constexpr const float kPlayerHalfDepth = 0.3;
-    static constexpr const float kPlayerUpperHalfHeight = 0.3;
-    static constexpr const float kPlayerLowerHalfHeight = 1.3;
-
-    static constexpr const float kPlayerPutBlockDist = 3.5;
-    static constexpr const float kPlayerDestBlockDist = 3.5;
-
-    glm::vec3 pos_, dir_, plane_x_, plane_y_;
-    int select_block_ = 1;
-
-    // ======== Screen ========
-    int screen_width_;
-    int screen_height_;
-    bool fullscreen_;
-
-    // Stack overflowを起こすので、Heap領域にメモリを確保
-    uint32_t *buffer_;
-
-    uint32_t GetBufColor(int x, int y) const {
-        assert(0 <= x && x < screen_width_ && 0 <= y && y < screen_height_);
-        return buffer_[screen_width_ * y + x];
-    }
-    void SetBufColor(int x, int y, uint32_t color) {
-        assert(0 <= x && x < screen_width_ && 0 <= y && y < screen_height_);
-        buffer_[screen_width_ * y + x] = color;
-    }
 
     // ======== Time ========
     float time_;
@@ -105,3 +79,4 @@ private:
     void Quit();
 };
 
+}

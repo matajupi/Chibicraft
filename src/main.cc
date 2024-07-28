@@ -1,6 +1,8 @@
 #include <cstdlib>
 #include "game.h"
 
+using namespace chibicraft;
+
 int main(int argc, char **argv) {
     Game game(960, 600, false);
     game.Start();
