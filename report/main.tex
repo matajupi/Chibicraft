@@ -33,7 +33,7 @@
 \newcommand{\todo}[1]{\textcolor{magenta}{TODO: #1}}
 % ソースコードの表示設定
 \lstset{
-    language={Python},
+    language={bash},
     basicstyle={\ttfamily\small},
     keywordstyle={\color{blue}},
     commentstyle={\color{green}},
@@ -43,7 +43,7 @@
 }
 
 % Title
-\title{情報基礎2 ミニプロジェクト}
+\title{Chibicraft}
 \author{
     慶應義塾大学 環境情報学部 \\
     72375699 二又康輔
@@ -56,18 +56,63 @@
 
 % Contents
 \section{概要}
-- Minecraftを参考にChibicraftを作った
-- できるだけフルスクラッチで書いた
-- 言語はC++
-- 3D描画に特化したライブラリは使っていない
-- LLM等は一切利用していない。
+Chibicraftは「できるだけフルスクラッチでMinecraftを再現する」ことを目標として作られたゲームである。
+現在の機能としては、主にワールドの探索、ブロックの配置、破壊を行うことができる。
+
+\begin{figure}[H]
+    \begin{center}
+        \includegraphics[width=100mm]{chibi.png}
+        \caption{Chibicraftのイメージ}
+    \end{center}
+\end{figure}
 
 \section{環境構築}
-- Ubuntuで動作確認済み
-- 環境構築が困難なので、VMなどでUbuntuを建てて動かすことを推奨
+Chibicraftは現在、Ubuntu22.04上で正常に動作することが確認されている。
+また、Kali Linux2024.1上では、動作はするが視点操作が反転するというバグが発見されている。
+Mac OSやWindows上での動作は保証されていないため、Virtual Machine等を用いてUbuntu上で動かすことを推奨している。
 
-\section{動作ガイド}
+\subsection{Ubuntu上での環境構築手順}
+まず、SDL1.2とOpenGL Mathematicsをインストールする。
+\begin{lstlisting}
+$ sudo apt update
+$ sudo apt install libsdl1.2-dev -y
+$ sudo apt install libglm-dev -y
+\end{lstlisting}
+次にChibicraftをインストールする。
+\begin{lstlisting}
+$ git clone --recursive https://github.com/matajupi/chibigit.git
+$ cd Chibicraft
+$ make
+\end{lstlisting}
+ChibicraftはChibicraftディレクトリ直下で次のコマンドを実行することにより起動することができる。
+\begin{lstlisting}
+$ ./bin/chibi
+\end{lstlisting}
 
-\section{プログラム中のアピールしたい点}
+\section{ゲームの操作}
+\begin{tabular}{ll}                                         \hline
+    キー            & 説明                                  \\ \hline \hline
+    w               & 前進                                  \\
+    s               & 後退                                  \\
+    a               & 左に移動                              \\
+    d               & 右に移動                              \\
+    マウスカーソル  & 視点操作                              \\
+    左クリック      & ブロックを破壊                        \\
+    右クリック      & ブロックを配置                        \\
+    左矢印          & ブロックの変更(種類は画面左上に表示)  \\
+    右矢印          & ブロックの変更(種類は画面左上に表示)  \\ \hline
+\end{tabular}
+
+\section{アピールしたい点}
+ChibicraftはC++で書かれており、ゲームエンジンにQuickCG\cite{quickcg}を利用している。
+ChibicraftはできるだけフルスクラッチでMinecraftを再現することを目標としているため、3D描画に特化したゲームエンジンやライブラリ等は利用していない。
+また、LLMも利用していない。
+3Dの描画にはRaycastingというシンプルなアルゴリズムを用いている。
+また、Raycastingの高速化のためにOpenMPによる並列化を行っている。
+
+\begin{thebibliography}{1}
+    \bibitem{quickcg} QuickCG
+    \url{https://lodev.org/quickcg/}
+\end{thebibliography}
 
 \end{document}
