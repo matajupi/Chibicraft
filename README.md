@@ -10,7 +10,7 @@ Chibicraftは現在、Ubuntu22.04上で正常に動作することが確認さ�
 また、Kali Linux2024.1上では、動作はするが視点操作が反転するというバグが発見されている。
 Mac OSやWindows上での動作は保証されていないため、Virtual Machine等を用いてUbuntu上で動かすことを推奨している。
 
-## Ubuntu上での環境構築手順
+### Ubuntu上での環境構築手順
 まず、SDL1.2とOpenGL Mathematicsをインストールする。
 ```bash
 $ sudo apt update
