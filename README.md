@@ -3,7 +3,8 @@
 Chibicraftは「できるだけフルスクラッチでMinecraftを再現する」ことを目標として作られたゲームである。
 現在の機能としては、主にワールドの探索、ブロックの配置、破壊を行うことができる。
 
-![Chibicraft](chibicraft.png)
+![Chibicraft1](chibi.png)
+![Chibicraft2](tnt.png)
 
 ## 環境構築
 Chibicraftは現在、Ubuntu22.04上で正常に動作することが確認されている。
